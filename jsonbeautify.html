@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>JSON Beautifier</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    header {
+      background-color: #007BFF;
+      color: white;
+      padding: 15px 20px;
+      font-size: 20px;
+      display: flex;
+      justify-content: center;
+      position: relative;
+    }
+
+    .theme-toggle {
+      position: absolute;
+      right: 20px;
+      top: 12px;
+      background: transparent;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: white;
+    }
+
+    .button-row {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      padding: 15px;
+      flex-wrap: wrap;
+      background-color: #f0f0f0;
+    }
+
+    .button-row button {
+      padding: 10px 16px;
+      font-size: 14px;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .button-row button:hover {
+      background-color: #0056b3;
+    }
+
+    .error {
+      text-align: center;
+      color: red;
+      font-size: 14px;
+      margin-top: -10px;
+      margin-bottom: 10px;
+    }
+
+    .container {
+      display: flex;
+      flex: 1;
+      padding: 20px;
+      gap: 20px;
+    }
+
+    textarea {
+      flex: 1;
+      padding: 15px;
+      font-family: monospace;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      resize: none;
+      height: 100%;
+      background: white;
+      color: black;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    /* Dark Theme */
+    body.dark {
+      background-color: #1e1e1e;
+      color: #f1f1f1;
+    }
+
+    body.dark header {
+      background-color: #222;
+    }
+
+    body.dark .theme-toggle {
+      color: #f1f1f1;
+    }
+
+    body.dark .button-row {
+      background-color: #2a2a2a;
+    }
+
+    body.dark textarea {
+      background-color: #2d2d2d;
+      color: #f1f1f1;
+      border: 1px solid #555;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    JSON Beautifier
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeIcon" title="Toggle Theme">🌙</button>
+  </header>
+
+  <div class="button-row">
+    <button onclick="beautifyJson()">Beautify</button>
+    <button onclick="minifyJson()">Minify</button>
+    <button onclick="copyToClipboard()">Copy Output</button>
+    <button onclick="downloadJson()">Download</button>
+  </div>
+
+  <div class="error" id="errorMsg"></div>
+
+  <div class="container">
+    <textarea id="inputJson" placeholder="Paste raw JSON here..."></textarea>
+    <textarea id="outputJson" placeholder="Beautified JSON will appear here..." readonly></textarea>
+  </div>
+
+  <script>
+    const inputBox = document.getElementById("inputJson");
+    const outputBox = document.getElementById("outputJson");
+    const errorMsg = document.getElementById("errorMsg");
+    const themeIcon = document.getElementById("themeIcon");
+
+    // Auto-beautify on input
+    inputBox.addEventListener("input", () => {
+      beautifyJson(true);
+    });
+
+    function beautifyJson(silent = false) {
+      const input = inputBox.value;
+      try {
+        const parsed = JSON.parse(input);
+        const beautified = JSON.stringify(parsed, null, 2);
+        outputBox.value = beautified;
+        if (!silent) errorMsg.textContent = '';
+      } catch (e) {
+        outputBox.value = '';
+        if (!silent) errorMsg.textContent = '❌ Invalid JSON: ' + e.message;
+      }
+    }
+
+    function minifyJson() {
+      const input = inputBox.value;
+      try {
+        const parsed = JSON.parse(input);
+        outputBox.value = JSON.stringify(parsed);
+        errorMsg.textContent = '';
+      } catch (e) {
+        outputBox.value = '';
+        errorMsg.textContent = '❌ Invalid JSON: ' + e.message;
+      }
+    }
+
+    function copyToClipboard() {
+      if (!outputBox.value) return;
+      outputBox.select();
+      document.execCommand("copy");
+      alert("Copied to clipboard!");
+    }
+
+    function downloadJson() {
+      if (!outputBox.value) return;
+      const blob = new Blob([outputBox.value], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "beautified.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle("dark");
+      const isDark = document.body.classList.contains("dark");
+      localStorage.setItem("theme", isDark ? "dark" : "light");
+      themeIcon.textContent = isDark ? "☀️" : "🌙";
+    }
+
+    // Load persisted theme
+    (function () {
+      const savedTheme = localStorage.getItem("theme");
+      if (savedTheme === "dark") {
+        document.body.classList.add("dark");
+        themeIcon.textContent = "☀️";
+      }
+    })();
+  </script>
+
+</body>
+</html>
